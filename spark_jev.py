@@ -1,0 +1,16 @@
+"""Register a Spark SQL UDF returning typed Jev decision fields."""
+from jev_common import JevClient
+
+def register_jev_if(spark, question, *, threshold=0.8, name='jev_if'):
+    from pyspark.sql.functions import udf
+    from pyspark.sql.types import DoubleType, StringType, StructField, StructType
+    schema = StructType([StructField('route', StringType(), False),
+                         StructField('probability', DoubleType(), True),
+                         StructField('state_sha256', StringType(), True)])
+    def judge(text):
+        if not hasattr(judge, '_client'):
+            judge._client = JevClient(question, threshold=threshold)
+        result = judge._client.decide(text)
+        return result['route'], result['probability'], result['state_sha256']
+    spark.udf.register(name, udf(judge, schema))
+    return name
